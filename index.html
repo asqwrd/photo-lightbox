@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Photo Lightbox</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css">
+
+
+  </head>
+
+  <body>
+    <main class="main">
+      <div id="grid" class="grid">
+
+      </div>
+    </main>
+    <article id="lightbox" class="lightbox" data-photo=0>
+      <header class="lightbox-header">
+        <h1 id="lightbox-title" class="lightbox-title"></h1>
+        <span id="lightbox-close" class="close material-icons">close</span>
+      </header>
+      <span id="next" class="next arrows material-icons">keyboard_arrow_right</span>
+      <span id="prev" class="prev arrows material-icons">keyboard_arrow_left</span>
+      <img src="" class="lightbox-img" />
+    </article>
+  </body>
+  <script type="text/javascript">
+    var xmlhttp = new XMLHttpRequest();
+    var getty_key = "n4g8tmvr29hsf4skpesurazm";
+    var images = [];
+    var grid = document.getElementById('grid');
+    var lightbox = document.getElementById('lightbox');
+    var lightbox_img = document.querySelector('.lightbox > .lightbox-img');
+    var lightbox_title = document.getElementById('lightbox-title');
+
+    grid.addEventListener('click',function(e){
+      if(e.target.classList.contains('grid-img') || e.target.classList.contains('grid-item')){
+        lightbox.dataset.photo=e.target.dataset.photo;
+        lightbox_img.src = images[e.target.dataset.photo].image;
+        lightbox_title.innerHTML = images[e.target.dataset.photo].title;
+        lightbox.classList.add('open');
+
+      }
+    });
+
+    lightbox.addEventListener('click',function(e){
+      var image_index =  parseInt(lightbox.dataset.photo);
+
+      if(e.target.id == 'next'){
+        image_index+=1;
+        if(image_index == images.length){
+          image_index = 0
+        }
+        lightbox_img.src = images[image_index].image ;
+        lightbox_title.innerHTML = (image_index == (images.length)) ?  images[0].title : images[image_index].title ;
+        lightbox.dataset.photo = image_index;
+      }else if(e.target.id == 'prev'){
+        image_index-=1;
+        if(image_index == -1){
+          image_index = images.length-1;
+        }
+        lightbox_img.src =  images[image_index].image ;
+        lightbox_title.innerHTML = (image_index == (images.length)) ?  images[0].title : images[image_index].title ;
+        lightbox.dataset.photo = image_index;
+      }else if(e.target.id == 'lightbox-close'){
+        lightbox.classList.remove('open');
+      }
+    });
+
+
+
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+           if (xmlhttp.status == 200) {
+               var data = JSON.parse(xmlhttp.response);
+               var html = '<div class="grid-item title-item"><span class="lightbox-name">Getty Landmarks Lightbox</span></div>';
+               data.images.forEach(function(image,index){
+                 images.push({image:image.display_sizes[0].uri, title:image.title});
+                 html+='<div class="grid-item" data-photo='+ index +'><img data-photo='+ index +' class="grid-img" src="'+ image.display_sizes[0].uri  +'" /></div>';
+               });
+
+               grid.innerHTML = html;
+
+           }
+           else if (xmlhttp.status == 400) {
+              alert('There was an error 400');
+           }
+           else {
+               alert('something else other than 200 was returned');
+           }
+        }
+    };
+
+    xmlhttp.open("GET", "https://api.gettyimages.com/v3/search/images?fields=display_set,detail_set&phrase=landmarks", true);
+    xmlhttp.setRequestHeader("Api-Key", getty_key);
+    xmlhttp.send();
+  </script>
+</html>
